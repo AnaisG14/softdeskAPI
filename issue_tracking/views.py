@@ -2,6 +2,8 @@ from issue_tracking.models import Project, Issue, Comment
 from issue_tracking.serializers import ProjectSerializer, IssueSerializer, CommentSerializer, UserSerializer
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from django.contrib.auth.models import User
+from rest_framework import permissions
+from issue_tracking.permissions import IsOwnerOrReadOnly
 
 
 class ProjectList(ListCreateAPIView):
@@ -9,6 +11,7 @@ class ProjectList(ListCreateAPIView):
 
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(author_user_id=self.request.user)
@@ -19,6 +22,7 @@ class ProjectDetail(RetrieveUpdateDestroyAPIView):
 
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
 
 class IssueList(ListCreateAPIView):
@@ -26,6 +30,7 @@ class IssueList(ListCreateAPIView):
 
     queryset = Issue.objects.all()
     serializer_class = IssueSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(author_user_id=self.request.user)
@@ -36,6 +41,7 @@ class IssueDetail(RetrieveUpdateDestroyAPIView):
 
     queryset = Issue.objects.all()
     serializer_class = IssueSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
 
 class CommentList(ListCreateAPIView):
@@ -43,6 +49,7 @@ class CommentList(ListCreateAPIView):
 
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(author_user_id=self.request.user)
@@ -53,6 +60,7 @@ class CommentDetail(RetrieveUpdateDestroyAPIView):
 
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
 
 class UserList(ListCreateAPIView):
