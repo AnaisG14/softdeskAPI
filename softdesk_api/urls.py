@@ -15,22 +15,27 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import routers
+from rest_framework_nested import routers
 from issue_tracking import views
+
+
+router = routers.SimpleRouter()
+router.register('projects', views.ProjectViewSet, basename='projects')
+# router.register('issue', views.IssueViewSet, basename='issue')
+# router.register('comment', views.CommentViewSet, basename='comment')
+router.register('signup', views.UserViewSet)
+
+projects_router = routers.NestedSimpleRouter(router, r'projects', lookup='project_id')
+projects_router.register(r'issues', views.IssueViewSet, basename='project-issue')
+projects_router.register(r'users', views.ContributorsViewSet, basename='project-user')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api-auth/', include('rest_framework.urls')),
-    path('project/', views.ProjectList.as_view()),
-    path('project/<int:pk>/', views.ProjectDetail.as_view()),
-    path('issue/', views.IssueList.as_view()),
-    path('issue/<int:pk>/', views.IssueDetail.as_view()),
-    path('comment/', views.CommentList.as_view()),
-    path('comment/<int:pk>/', views.CommentDetail.as_view()),
-    path('user/', views.UserList.as_view()),
-    path('user/<int:pk>/', views.UserDetail.as_view()),
+    path('', include(router.urls)),
+    path('', include(projects_router.urls)),
 ]
-
 

@@ -11,12 +11,16 @@ class Project(models.Model):
         type (str): type of project (front-end, back-end, ios, android)
     """
 
-    TYPE = [('FE', 'front-end'), ('BE', 'back-end'), ('IOS', 'IOS'), ('AND', 'Android')]
+    TYPE = [('front_end', 'front-end'), ('back-end', 'back-end'), ('IOS', 'IOS'), ('android', 'android')]
 
     title = models.CharField(max_length=100)
     description = models.TextField()
     type = models.CharField(max_length=20, choices=TYPE)
     author_user_id = models.ForeignKey(User, related_name='projects', on_delete=models.CASCADE)
+    contributors = models.ManyToManyField(User, through='Contributors', related_name='contributors')
+
+    def __str__(self):
+        return f"{self.title} by {self.author_user_id}"
 
 
 class Issue(models.Model):
@@ -44,9 +48,12 @@ class Issue(models.Model):
     project_id = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='issues_project')
     author_user_id = models.ForeignKey(User, related_name='issues', on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.title} by {self.author_user_id} : {self.project_id}"
+
 
 class Comment(models.Model):
-    """ Stores all information about a comment of a probleme.
+    """ Stores all information about a comment of a problem.
 
      Attributes:
          description (str): description of the issue
@@ -58,11 +65,27 @@ class Comment(models.Model):
     issue_id = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name='comments_issue')
     author_user_id = models.ForeignKey(User, related_name='comments', on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.id} by {self.author_user_id}"
 
 
-# class Contributors(models.Model):
-#     """
-#         Stores a relation between users and projects.
-#     """
-#     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contributor')
-#     project_id = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='projects')
+class Contributors(models.Model):
+    """ It is a through table storing relation between projects and users."""
+
+    PERMISSIONS = [
+        ('read', 'read'),
+        ('admin', 'admin'),
+    ]
+
+    ROLES = [
+        ('author', 'author'),
+        ('contributor', 'contributor')
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='project')
+    permission = models.CharField(max_length=10, choices=PERMISSIONS, default='read')
+    role = models.CharField(max_length=50, choices=ROLES, default='')
+
+    def __str__(self):
+        return f"User: {self.user} -> Project {self.project.title}"

@@ -1,24 +1,20 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from issue_tracking.models import Project, Issue, Comment
+from issue_tracking.models import Project, Issue, Comment, Contributors
 
 
-class ProjectSerializer(serializers.ModelSerializer):
-    issues_project = serializers.PrimaryKeyRelatedField(many=True, queryset=Issue.objects.all())
-    author_user_id = serializers.ReadOnlyField(source='author_user_id.username')
+class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Project
-        fields = ['id', 'title', 'description', 'type', 'author_user_id', 'issues_project']
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'password']
 
 
-class IssueSerializer(serializers.ModelSerializer):
-    comments_issue = serializers.PrimaryKeyRelatedField(many=True, queryset=Comment.objects.all())
-    author_user_id = serializers.ReadOnlyField(source='author_user_id.username')
+class ContributorSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Issue
-        fields = ['id', 'title', 'description', 'tag', 'priority', 'status', 'created_date_time', 'project_id', 'author_user_id', 'comments_issue']
+        model = Contributors
+        fields = ['id', 'user', 'project', 'permission', 'role']
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -29,11 +25,28 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['id', 'description', 'created_date_time', 'issue_id', 'author_user_id']
 
 
-class UserSerializer(serializers.ModelSerializer):
-    projects = serializers.PrimaryKeyRelatedField(many=True, queryset=Project.objects.all())
-    issues = serializers.PrimaryKeyRelatedField(many=True, queryset=Issue.objects.all())
-    comments = serializers.PrimaryKeyRelatedField(many=True, queryset=Comment.objects.all())
+class IssueListSerializer(serializers.ModelSerializer):
+    author_user_id = serializers.ReadOnlyField(source='author_user_id.username')
 
     class Meta:
-        model = User
-        fields = ['id', 'username', 'projects', 'issues', 'comments']
+        model = Issue
+        fields = ['id', 'title', 'description', 'tag', 'priority', 'status', 'created_date_time', 'project_id', 'author_user_id']
+
+
+class IssueDetailSerializer(serializers.ModelSerializer):
+    comments_issue = CommentSerializer(many=True)
+    author_user_id = serializers.ReadOnlyField(source='author_user_id.username')
+
+    class Meta:
+        model = Issue
+        fields = ['id', 'title', 'description', 'tag', 'priority', 'status', 'created_date_time', 'project_id', 'author_user_id', 'comments_issue']
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    contributors = UserSerializer(many=True, read_only=True)
+    author_user_id = serializers.ReadOnlyField(source='author_user_id.username')
+
+    class Meta:
+        model = Project
+        fields = ['id', 'title', 'description', 'type', 'author_user_id', 'contributors']
+
