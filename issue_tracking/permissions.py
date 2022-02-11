@@ -9,4 +9,13 @@ class IsOwnerOrReadOnly(BasePermission):
         # so we'll always allow GET, HEAD or OPTIONS requests.
         if request.method in SAFE_METHODS:
             return True
-        return bool(obj.author_user_id == request.user)
+        return bool(request.user in obj.contributors.user)
+
+
+class CanAddContributorOrReadOnly(BasePermission):
+    """ Custom permission to only allow the contributor to modify comment. """
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+        return obj.role == "author"

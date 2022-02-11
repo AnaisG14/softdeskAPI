@@ -23,13 +23,14 @@ from issue_tracking import views
 
 router = routers.SimpleRouter()
 router.register('projects', views.ProjectViewSet, basename='projects')
-# router.register('issue', views.IssueViewSet, basename='issue')
-# router.register('comment', views.CommentViewSet, basename='comment')
-router.register('signup', views.UserViewSet)
+router.register('signup', views.SignupViewSet)
 
 projects_router = routers.NestedSimpleRouter(router, r'projects', lookup='project_id')
 projects_router.register(r'issues', views.IssueViewSet, basename='project-issue')
 projects_router.register(r'users', views.ContributorsViewSet, basename='project-user')
+
+issues_router = routers.NestedSimpleRouter(projects_router, r'issues', lookup='issue_id')
+issues_router.register(r'comments', views.CommentViewSet, basename='issue-comment')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,5 +38,6 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path('', include(router.urls)),
     path('', include(projects_router.urls)),
+    path('', include(issues_router.urls))
 ]
 

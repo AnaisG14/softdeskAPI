@@ -11,16 +11,16 @@ class Project(models.Model):
         type (str): type of project (front-end, back-end, ios, android)
     """
 
-    TYPE = [('front_end', 'front-end'), ('back-end', 'back-end'), ('IOS', 'IOS'), ('android', 'android')]
+    TYPE = [('front-end', 'front-end'), ('back-end', 'back-end'), ('IOS', 'IOS'), ('android', 'android')]
 
     title = models.CharField(max_length=100)
     description = models.TextField()
     type = models.CharField(max_length=20, choices=TYPE)
-    author_user_id = models.ForeignKey(User, related_name='projects', on_delete=models.CASCADE)
+    # author_user_id = models.ForeignKey(User, related_name='projects', on_delete=models.CASCADE)
     contributors = models.ManyToManyField(User, through='Contributors', related_name='contributors')
 
     def __str__(self):
-        return f"{self.title} by {self.author_user_id}"
+        return f"{self.id}: {self.title}"
 
 
 class Issue(models.Model):
@@ -46,10 +46,10 @@ class Issue(models.Model):
     status = models.CharField(max_length=50, choices=STATUS)
     created_date_time = models.DateTimeField(auto_now_add=True)
     project_id = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='issues_project')
-    author_user_id = models.ForeignKey(User, related_name='issues', on_delete=models.CASCADE)
+    # author_user_id = models.ForeignKey(User, related_name='issues', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.title} by {self.author_user_id} : {self.project_id}"
+        return f"{self.id} : {self.title} : {self.project_id}"
 
 
 class Comment(models.Model):
@@ -63,10 +63,10 @@ class Comment(models.Model):
     description = models.TextField()
     created_date_time = models.DateTimeField(auto_now_add=True)
     issue_id = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name='comments_issue')
-    author_user_id = models.ForeignKey(User, related_name='comments', on_delete=models.CASCADE)
+    # author_user_id = models.ForeignKey(User, related_name='comments', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.id} by {self.author_user_id}"
+        return f"{self.id} in {self.issue_id.title}"
 
 
 class Contributors(models.Model):
@@ -88,4 +88,4 @@ class Contributors(models.Model):
     role = models.CharField(max_length=50, choices=ROLES, default='')
 
     def __str__(self):
-        return f"User: {self.user} -> Project {self.project.title}"
+        return f"{self.id}: User: {self.user} -> Project {self.project.title}"
