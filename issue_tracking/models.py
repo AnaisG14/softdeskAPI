@@ -16,7 +16,7 @@ class Project(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     type = models.CharField(max_length=20, choices=TYPE)
-    # author_user_id = models.ForeignKey(User, related_name='projects', on_delete=models.CASCADE)
+    author_user_id = models.ForeignKey(User, related_name='projects', on_delete=models.CASCADE)
     contributors = models.ManyToManyField(User, through='Contributors', related_name='contributors')
 
     def __str__(self):
@@ -45,11 +45,12 @@ class Issue(models.Model):
     priority = models.CharField(max_length=50, choices=PRIORITY)
     status = models.CharField(max_length=50, choices=STATUS)
     created_date_time = models.DateTimeField(auto_now_add=True)
-    project_id = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='issues_project')
-    # author_user_id = models.ForeignKey(User, related_name='issues', on_delete=models.CASCADE)
+    projects = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='issue_project')
+    author_user_id = models.ForeignKey(User, related_name='author_issue', on_delete=models.CASCADE)
+    assigned_user_id = models.ForeignKey(User, related_name='assigned', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.id} : {self.title} : {self.project_id}"
+        return f"{self.id} : {self.title} : {self.projects}"
 
 
 class Comment(models.Model):
@@ -63,7 +64,7 @@ class Comment(models.Model):
     description = models.TextField()
     created_date_time = models.DateTimeField(auto_now_add=True)
     issue_id = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name='comments_issue')
-    # author_user_id = models.ForeignKey(User, related_name='comments', on_delete=models.CASCADE)
+    author_user_id = models.ForeignKey(User, related_name='author_comment', on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.id} in {self.issue_id.title}"
@@ -85,7 +86,7 @@ class Contributors(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='project')
     permission = models.CharField(max_length=10, choices=PERMISSIONS, default='read')
-    role = models.CharField(max_length=50, choices=ROLES, default='')
+    role = models.CharField(max_length=50, choices=ROLES, default='contributor')
 
     def __str__(self):
         return f"{self.id}: User: {self.user} -> Project {self.project.title}"

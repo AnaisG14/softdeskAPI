@@ -25,12 +25,12 @@ router = routers.SimpleRouter()
 router.register('projects', views.ProjectViewSet, basename='projects')
 router.register('signup', views.SignupViewSet)
 
-projects_router = routers.NestedSimpleRouter(router, r'projects', lookup='project_id')
-projects_router.register(r'issues', views.IssueViewSet, basename='project-issue')
-projects_router.register(r'users', views.ContributorsViewSet, basename='project-user')
+projects_router = routers.NestedSimpleRouter(router, r'projects', lookup='project')
+projects_router.register(r'issues', views.IssueViewSet, basename='issues')
+projects_router.register(r'users', views.ContributorsViewSet, basename='users')
 
-issues_router = routers.NestedSimpleRouter(projects_router, r'issues', lookup='issue_id')
-issues_router.register(r'comments', views.CommentViewSet, basename='issue-comment')
+issues_router = routers.NestedSimpleRouter(projects_router, r'issues', lookup='issue')
+issues_router.register(r'comments', views.CommentViewSet, basename='comments')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

@@ -1,6 +1,6 @@
 from issue_tracking.models import Project, Issue, Comment, Contributors
 from issue_tracking.serializers import (ProjectSerializer,
-                                        IssueListSerializer,
+                                        IssueSerializer,
                                         CommentSerializer,
                                         UserSerializer,
                                         SignupSerializer,
@@ -31,10 +31,10 @@ class ProjectViewSet(ModelViewSet):
 
 class IssueViewSet(ModelViewSet):
     """ Use CRUD on all issues. """
-    serializer_class = IssueListSerializer
+    serializer_class = IssueSerializer
 
     def get_queryset(self):
-        return Issue.objects.filter(project_id=self.kwargs['project_id_pk'])
+        return Issue.objects.filter(projects=self.kwargs['project_pk'])
 
     # def perform_create(self, serializer):
     #     serializer.save(author_user_id=self.request.user)
@@ -54,7 +54,7 @@ class CommentViewSet(ModelViewSet):
     # permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        return Comment.objects.filter(issue_id=self.kwargs['issue_id_pk'])
+        return Comment.objects.filter(issue_id__project_id=self.kwargs['project_pk'], issue_id=self.kwargs['issue_pk'])
 
     # def get_queryset(self):
     #     queryset = Comment.objects.all()
@@ -88,7 +88,7 @@ class ContributorsViewSet(ModelViewSet):
     # permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        return Contributors.objects.filter(project=self.kwargs['project_id_pk'])
+        return Contributors.objects.filter(project=self.kwargs['project_pk'])
 
 
     # def get_permissions(self):
