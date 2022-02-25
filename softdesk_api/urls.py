@@ -16,7 +16,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import routers
 from rest_framework_nested import routers
 from issue_tracking import views
 
@@ -40,4 +39,3 @@ urlpatterns = [
     path('', include(projects_router.urls)),
     path('', include(issues_router.urls))
 ]
-

@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from rest_framework_nested.serializers import NestedHyperlinkedModelSerializer
 from issue_tracking.models import Project, Issue, Comment, Contributors
 
 
@@ -25,41 +24,26 @@ class ContributorSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'project', 'permission', 'role']
 
 
-class CommentSerializer(NestedHyperlinkedModelSerializer):
-    parent_lookup_kwargs = {
-        'issue_pk': 'issue__pk',
-        'project_pk': 'issue__project__pk'
-    }
-    # author_user_id = serializers.ReadOnlyField(source='author_user_id.username')
+class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'description', 'created_date_time']
+        fields = ['id', 'description', 'created_date_time', 'author_user_id', 'issue_id']
 
 
-class IssueSerializer(NestedHyperlinkedModelSerializer):
+class IssueSerializer(serializers.ModelSerializer):
 
-    parent_lookup_kwargs = {
-        'project_pk': 'project__pk',
-    }
-    # author_user_id = serializers.ReadOnlyField(source='author_user_id.username')
-    # comments_issue = CommentSerializer(many=True, read_only=True)
+    author_user_id = serializers.ReadOnlyField(source='author_user_id.username')
 
     class Meta:
         model = Issue
-        fields = ['id', 'title', 'description', 'tag', 'priority', 'status', 'created_date_time', 'projects']
+        fields = ['id', 'title', 'description', 'tag', 'priority',
+                  'status', 'created_date_time', 'projects', 'author_user_id', 'assigned_user_id']
 
 
-class ProjectSerializer(serializers.HyperlinkedModelSerializer):
+class ProjectSerializer(serializers.ModelSerializer):
     author_user_id = serializers.ReadOnlyField(source='author_user_id.username')
-    contributors = UserSerializer(many=True, read_only=True)
-    # issue_project = serializers.HyperlinkedRelatedField(view_name='issue-detail', many=True, read_only=True)
 
     class Meta:
         model = Project
-        fields = ['id', 'title', 'description', 'type', 'author_user_id', 'contributors']
-
-
-
-
-
+        fields = ['id', 'title', 'description', 'type', 'author_user_id']

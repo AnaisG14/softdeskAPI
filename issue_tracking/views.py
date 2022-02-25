@@ -6,10 +6,11 @@ from issue_tracking.serializers import (ProjectSerializer,
                                         SignupSerializer,
                                         ContributorSerializer)
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from django.contrib.auth.models import User
 from rest_framework import permissions
-from issue_tracking.permissions import IsOwnerOrReadOnly
+from issue_tracking.permissions import (IsOwnerOrReadOnly,
+                                        CanAdminContributors,
+                                        HasContributorPermission)
 
 
 class ProjectViewSet(ModelViewSet):
@@ -17,54 +18,75 @@ class ProjectViewSet(ModelViewSet):
 
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
-    # def get_permissions(self):
-    #     if self.action == 'list':
-    #         permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    #     else:
-    #         permission_classes = [IsOwnerOrReadOnly]
-    #     return [permission() for permission in permission_classes]
+    def get_queryset(self):
+        contributors = [project.contributors.through.objects.all() for project in self.queryset]
+        contributors_project = []
+        for contributor in contributors:
+            for instance in contributor:
+                if instance.user == self.request.user:
+                    contributors_project.append(instance.project.id)
 
-    # def perform_create(self, serializer):
-    #     serializer.save(author_user_id=self.request.user)
+        return Project.objects.filter(
+            id__in=contributors_project) | Project.objects.filter(author_user_id=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(author_user_id=self.request.user)
 
 
 class IssueViewSet(ModelViewSet):
     """ Use CRUD on all issues. """
+
     serializer_class = IssueSerializer
+    permission_classes = [permissions.IsAuthenticated, HasContributorPermission]
 
     def get_queryset(self):
-        return Issue.objects.filter(projects=self.kwargs['project_pk'])
+        issues = Issue.objects.filter(projects=self.kwargs['project_pk'])
+        return issues
 
-    # def perform_create(self, serializer):
-    #     serializer.save(author_user_id=self.request.user)
+    def perform_create(self, serializer):
+        serializer.save(author_user_id=self.request.user)
 
-    # def get_permissions(self):
-    #     if self.action == 'list':
-    #         permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    #     else:
-    #         permission_classes = [IsOwnerOrReadOnly]
-    #     return [permission() for permission in permission_classes]
+    def create(self, request, *args, **kwargs):
+        request.POST._mutable = True
+        request.data["projects"] = kwargs["project_pk"]
+        request.data["assigned_user_id"] = request.user.pk
+        request.POST._mutable = False
+        return super(IssueViewSet, self).create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        request.POST._mutable = True
+        request.data["projects"] = kwargs["project_pk"]
+        request.POST._mutable = False
+        return super(IssueViewSet, self).update(request, *args, **kwargs)
 
 
 class CommentViewSet(ModelViewSet):
     """ List all comments or create a new comment."""
 
     serializer_class = CommentSerializer
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, HasContributorPermission]
 
     def get_queryset(self):
-        return Comment.objects.filter(issue_id__project_id=self.kwargs['project_pk'], issue_id=self.kwargs['issue_pk'])
+        return Comment.objects.filter(issue_id=self.kwargs['issue_pk'])
 
-    # def get_queryset(self):
-    #     queryset = Comment.objects.all()
-    #     issue_id = self.request.GET.get('issue_id')
-    #     if issue_id is not None:
-    #         queryset = queryset.filter(issue_id=issue_id)
-    #     return queryset
+    def perform_create(self, serializer):
+        serializer.save(author_user_id=self.request.user)
 
-    # def perform_create(self, serializer):
-    #     serializer.save(author_user_id=self.request.user)
+    def create(self, request, *args, **kwargs):
+        request.POST._mutable = True
+        request.data["issue_id"] = kwargs["issue_pk"]
+        request.data["author_user_id"] = self.request.user.pk
+        request.POST._mutable = False
+        return super(CommentViewSet, self).create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        request.POST._mutable = True
+        request.data["issue_id"] = kwargs["issue_pk"]
+        request.data["author_user_id"] = self.request.user.pk
+        request.POST._mutable = False
+        return super(CommentViewSet, self).update(request, *args, **kwargs)
 
 
 class SignupViewSet(ModelViewSet):
@@ -82,18 +104,22 @@ class UserViewSet(ModelViewSet):
 
 
 class ContributorsViewSet(ModelViewSet):
-    """ List all contributors or add a contributor to a project"""
+    """ List all contributors or admin contributors of a project"""
 
     serializer_class = ContributorSerializer
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [CanAdminContributors, HasContributorPermission]
 
     def get_queryset(self):
         return Contributors.objects.filter(project=self.kwargs['project_pk'])
 
+    def create(self, request, *args, **kwargs):
+        request.POST._mutable = True
+        request.data["project"] = kwargs["project_pk"]
+        request.POST._mutable = False
+        return super(ContributorsViewSet, self).create(request, *args, **kwargs)
 
-    # def get_permissions(self):
-    #     if self.action == 'list':
-    #         permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    #     else:
-    #         permission_classes = [IsOwnerOrReadOnly]
-    #     return [permission() for permission in permission_classes]
+    def update(self, request, *args, **kwargs):
+        request.POST._mutable = True
+        request.data["project"] = kwargs["project_pk"]
+        request.POST._mutable = False
+        return super(ContributorsViewSet, self).create(request, *args, **kwargs)

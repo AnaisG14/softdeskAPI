@@ -20,7 +20,7 @@ class Project(models.Model):
     contributors = models.ManyToManyField(User, through='Contributors', related_name='contributors')
 
     def __str__(self):
-        return f"{self.id}: {self.title}"
+        return f"{self.pk}: {self.title}"
 
 
 class Issue(models.Model):
@@ -50,7 +50,7 @@ class Issue(models.Model):
     assigned_user_id = models.ForeignKey(User, related_name='assigned', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.id} : {self.title} : {self.projects}"
+        return f"{self.pk} : {self.title} : {self.projects}"
 
 
 class Comment(models.Model):
@@ -67,7 +67,7 @@ class Comment(models.Model):
     author_user_id = models.ForeignKey(User, related_name='author_comment', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.id} in {self.issue_id.title}"
+        return f"{self.pk} in {self.issue_id.title}"
 
 
 class Contributors(models.Model):
@@ -89,4 +89,4 @@ class Contributors(models.Model):
     role = models.CharField(max_length=50, choices=ROLES, default='contributor')
 
     def __str__(self):
-        return f"{self.id}: User: {self.user} -> Project {self.project.title}"
+        return f"{self.pk}: User: {self.user} -> Project {self.project.title}"
