@@ -48,4 +48,7 @@ This API will serve for multi-platform applications. Applications will allow use
 ### 2- Open the site with your local server on a browser :
     http://127.0.0.1:8000/signup/
 
+## D- Documentation
+[lien vers documentation](https://documenter.getpostman.com/view/18264928/UVsEV8rm)
+
 
