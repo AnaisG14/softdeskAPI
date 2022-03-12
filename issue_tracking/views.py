@@ -107,7 +107,7 @@ class ContributorsViewSet(ModelViewSet):
     """ List all contributors or admin contributors of a project"""
 
     serializer_class = ContributorSerializer
-    permission_classes = [CanAdminContributors, HasContributorPermission]
+    permission_classes = [CanAdminContributors]
 
     def get_queryset(self):
         return Contributors.objects.filter(project=self.kwargs['project_pk'])
